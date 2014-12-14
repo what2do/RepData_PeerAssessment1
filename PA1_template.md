@@ -65,6 +65,7 @@ and the average number of steps taken, averaged across all days (y-axis)
 
 ```r
 data_by_interval <- aggregate(steps ~ interval, data=data, FUN=mean, na.rm=TRUE)
+
 ggplot(data_by_interval, aes(x=interval, y=steps)) +
     geom_line(stat="identity") +
     labs(x="Interval", y="Number of steps") +
@@ -106,32 +107,22 @@ mean/median for that day, or the mean for that 5-minute interval, etc.
 
 
 ```r
-#I will use the means for the 5-minute intervals as fillers for missing values.
+#I will use the means for the 5-minute intervals rounded to the nearest whole
+#number.
 ```
 
 3. Create a new dataset that is equal to the original dataset but with the 
 missing data filled in.
 
 ```r
-new_data <- data                                                 
+new_data <- data      
+
 for (i in 1:nrow(new_data)) {
     if (is.na(new_data$steps[i])) {
-        new_data$steps[i] <- ceiling(data_by_interval[which(new_data$interval[i] 
-                                    == data_by_interval$interval), ]$steps)
+        new_data$steps[i] <- round(data_by_interval[which(new_data$interval[i] 
+                                    == data_by_interval$interval), ]$steps,0)
     }
 }
-
-head(new_data)
-```
-
-```
-##   steps       date interval
-## 1     2 2012-10-01        0
-## 2     1 2012-10-01        5
-## 3     1 2012-10-01       10
-## 4     1 2012-10-01       15
-## 5     1 2012-10-01       20
-## 6     3 2012-10-01       25
 ```
 
 4. Make a histogram of the total number of steps taken each day and Calculate 
@@ -146,8 +137,8 @@ of steps?
 new_by_day <- aggregate(steps ~ date, data=new_data, FUN=sum, na.rm=TRUE)
 
 qplot(x=date, y=steps, data=new_by_day, 
-    stat = 'summary', fun.y = 'sum', geom='bar') +
-    labs(title='Total steps taken per day', x='Day', y='Steps')
+    stat = "identity", geom = "bar") +
+    labs(title="Total steps taken per day", x="Day", y="Number of steps")
 ```
 
 ![](./PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
@@ -159,7 +150,7 @@ mean(new_by_day$steps)
 ```
 
 ```
-## [1] 10784.92
+## [1] 10765.64
 ```
 
 * Median total number of steps taken per day
@@ -169,8 +160,12 @@ median(new_by_day$steps)
 ```
 
 ```
-## [1] 10909
+## [1] 10762
 ```
+
+After imputing the missing data, there is a slight decrease in the new mean of 
+total steps taken per day and the new median of total steps taken per day
+compare to the old values.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 For this part the weekdays() function may be of some help here. Use the dataset 
@@ -187,6 +182,7 @@ day_of_week <- function(date) {
         "weekday"
     }
 }
+
 new_data$day_of_week <- as.factor(sapply(new_data$date, day_of_week))
 ```
 
@@ -201,12 +197,17 @@ new_by_interval <- aggregate(steps ~ interval+day_of_week, data=new_data,
                              FUN=mean, na.rm=TRUE)
 
 ggplot(new_by_interval, aes(x=interval, y=steps)) + 
-    geom_line(color="steelblue", size=1) + 
+    geom_line(stat = "identity") +
     facet_wrap(~ day_of_week, nrow=2, ncol=1) +
     labs(x="Interval", y="Number of steps")
 ```
 
 ![](./PA1_template_files/figure-html/unnamed-chunk-16-1.png) 
+
+### Conculsion
+We can see that activity on the weekends starts later in the day, weekday has 
+the greatest peak from all steps intervals, but weekend has more peaks that are 
+above 100.
 
 ### Information about the analysis environment
 
